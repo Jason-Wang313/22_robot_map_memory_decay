@@ -33,5 +33,4 @@
 - Artifact audit completed: `python scripts/audit_artifacts.py`.
 - LaTeX build completed with `pdflatex`, `bibtex`, `pdflatex`, `pdflatex`; all exits were 0.
 - Final PDF copied to `C:/Users/wangz/Downloads/22.pdf`.
-- Public GitHub repo created; complete repository push is part of the final publish step.
-
+- Public GitHub repo created and complete repository pushed from local `master` to `origin/master`.

@@ -1,6 +1,6 @@
 # Child Status
 
-Stage: preparing repository for publish.
+Stage: final publish-status cleanup.
 
 Completed:
 - Wrote `plan.md`.
@@ -8,16 +8,17 @@ Completed:
 - Ran evidence and artifact audit.
 - Built `paper/main.pdf` successfully.
 - Copied final PDF to `C:/Users/wangz/Downloads/22.pdf`.
-- Added `README.md` and `requirements.txt`.
+- Created public GitHub repo `https://github.com/Jason-Wang313/22_robot_map_memory_decay`.
+- Committed full repo and pushed `master` to `origin/master`.
+- Updated `docs/final_audit.md` to record push completion.
 
 Current commands:
-- `gh auth status`
-- Git add/commit.
-- Create public GitHub repo `22_robot_map_memory_decay` and push if authentication permits.
+- `python scripts/audit_artifacts.py`
+- Commit/push final audit status update.
 
 Failures:
 - None.
 
 Recovery steps:
-- If GitHub authentication or repo creation fails, document exact failure in `docs/final_audit.md`.
+- If final push fails, patch `docs/final_audit.md` with the exact failure and leave local commit available.
 
