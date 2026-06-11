@@ -1,24 +1,26 @@
 # Child Status
 
-Stage: final publish-status cleanup.
+Stage: complete.
 
 Completed:
-- Wrote `plan.md`.
-- Refreshed official ICLR 2026 template.
-- Ran evidence and artifact audit.
-- Built `paper/main.pdf` successfully.
+- Wrote `plan.md` as the first workspace action.
+- Reused and validated retry artifacts.
+- Refreshed official ICLR 2026 template from `https://github.com/ICLR/Master-Template/raw/master/iclr2026.zip`.
+- Ran `python scripts/run_evidence.py` successfully.
+- Ran `python scripts/audit_artifacts.py` successfully.
+- Audit confirmed: 1337 landscape entries, 300 serious-skim entries, 225 deep-read entries, 100 hostile-prior entries, all required docs present.
+- Built `paper/main.pdf` successfully with direct `pdflatex`, `bibtex`, `pdflatex`, `pdflatex`; all exits were 0.
 - Copied final PDF to `C:/Users/wangz/Downloads/22.pdf`.
 - Created public GitHub repo `https://github.com/Jason-Wang313/22_robot_map_memory_decay`.
-- Committed full repo and pushed `master` to `origin/master`.
-- Updated `docs/final_audit.md` to record push completion.
+- Committed and pushed complete repo to `origin/master`; latest checked commit was `acff98f` before this final status update.
+- Wrote `docs/final_audit.md` with `pending orchestrator copy` for the visible Desktop PDF status.
 
 Current commands:
-- `python scripts/audit_artifacts.py`
-- Commit/push final audit status update.
+- Final status update commit and push.
 
 Failures:
 - None.
 
 Recovery steps:
-- If final push fails, patch `docs/final_audit.md` with the exact failure and leave local commit available.
+- None needed.
 
