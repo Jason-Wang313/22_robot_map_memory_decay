@@ -1,0 +1,17 @@
+{
+  "age_days_equal": 30.0,
+  "safe_exposure": 0.05,
+  "exposed_exposure": 3.8,
+  "safe_true_change_prob": 0.017347764334926796,
+  "exposed_true_change_prob": 0.7355227387001759,
+  "safe_true_expected_cost": 12.387821146794144,
+  "exposed_true_expected_cost": 67.44181909601407,
+  "age_only_cost_safe": 11.0,
+  "age_only_cost_exposed": 8.6,
+  "age_only_choice_route": "exposed_shortcut",
+  "exposure_aware_choice_route": "safe_detour",
+  "choice_code_note": "For legacy numeric fields, 1.0 means the condition named in the field is true.",
+  "age_only_chooses_exposed_shortcut": 1.0,
+  "exposure_aware_chooses_safe_detour": 1.0,
+  "expected_cost_gap_if_age_only_chooses_exposed": 55.05399794921993
+}

@@ -1,0 +1,51 @@
+{
+  "required_docs": {
+    "related_work_matrix.csv": true,
+    "literature_map.md": true,
+    "hostile_prior_work.md": true,
+    "novelty_boundary_map.md": true,
+    "novelty_decision.md": true,
+    "claims.md": true,
+    "reviewer_attacks.md": true,
+    "final_audit.md": true
+  },
+  "related_work_entries": 1337,
+  "related_work_has_required_extraction_columns": true,
+  "serious_skim_flagged": 300,
+  "deep_read_flagged": 225,
+  "hostile_prior_flagged": 100,
+  "serious_skim_doc_entries": 300,
+  "deep_read_doc_entries": 225,
+  "hostile_prior_doc_entries": 100,
+  "aggregate_methods": [
+    "no_decay",
+    "fixed_hazard",
+    "age_decay",
+    "uncertainty_only",
+    "cemd",
+    "oracle_prob"
+  ],
+  "noise_stress_rows": 30,
+  "figures": {
+    "aggregate_results.png": true,
+    "exposure_calibration.png": true,
+    "noise_stress.png": true,
+    "example_world.png": true
+  },
+  "formal_counterexample": {
+    "exists": true,
+    "age_only_choice_route": "exposed_shortcut",
+    "exposure_aware_choice_route": "safe_detour",
+    "expected_cost_gap": 55.05399794921993
+  },
+  "paper_main_tex_exists": true,
+  "paper_main_pdf_exists": true,
+  "downloads_pdf_exists": true,
+  "official_iclr_2026_files_present": {
+    "iclr2026_conference.sty": true,
+    "iclr2026_conference.bst": true,
+    "math_commands.tex": true,
+    "natbib.sty": true,
+    "fancyhdr.sty": true
+  }
+}
