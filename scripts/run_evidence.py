@@ -35,6 +35,7 @@ for path in (RESULTS, FIGURES, DOCS):
     path.mkdir(exist_ok=True)
 
 PROGRESS = RESULTS / "evidence_progress.json"
+HAZARD_STRESS_TABLE = RESULTS / "hazard_misspecification_table.tex"
 
 
 METHOD_ORDER = [
@@ -563,6 +564,89 @@ def run_noise_stress(noises: Sequence[float], n_episodes: int = 180, seed: int =
     return rows
 
 
+def calibrate_component_scores(scores: Sequence[float], target: float) -> List[float]:
+    mean_score = max(1e-9, statistics.mean(scores))
+    scale = target / mean_score
+    return [min(0.78, max(0.0, scale * score)) for score in scores]
+
+
+def resample_closures_with_hazard_mix(world: World, rng: random.Random, exposure_weight: float) -> None:
+    target = max(0.02, min(0.55, statistics.mean(edge.closure_prob for edge in world.edges)))
+    exposure_scores = [1.0 - math.exp(-0.45 * edge.exposure_true) for edge in world.edges]
+    age_scores = [1.0 - math.exp(-0.035 * edge.age_days) for edge in world.edges]
+    exposure_probs = calibrate_component_scores(exposure_scores, target)
+    age_probs = calibrate_component_scores(age_scores, target)
+    for edge, exposure_prob, age_prob in zip(world.edges, exposure_probs, age_probs):
+        mixed_prob = exposure_weight * exposure_prob + (1.0 - exposure_weight) * age_prob
+        edge.closure_prob = min(0.78, max(0.0, mixed_prob))
+        edge.closed = rng.random() < edge.closure_prob
+    choose_task(world, rng)
+
+
+def run_hazard_misspecification_stress(
+    exposure_weights: Sequence[float],
+    n_episodes: int = 160,
+    seed: int = 66000,
+) -> List[Dict[str, object]]:
+    rows: List[Dict[str, object]] = []
+    for wi, exposure_weight in enumerate(exposure_weights):
+        episode_rows: List[Dict[str, object]] = []
+        for ep in range(n_episodes):
+            world_seed = seed + wi * 10000 + ep * 37
+            world, absence_days = generate_world(world_seed, exposure_noise=0.35)
+            resample_rng = random.Random(world_seed + 991)
+            resample_closures_with_hazard_mix(world, resample_rng, exposure_weight)
+            for method in METHOD_ORDER:
+                metrics = execute_method(world, method)
+                row: Dict[str, object] = {
+                    "episode": ep,
+                    "method": method,
+                    "seed": world_seed,
+                    "absence_days": absence_days,
+                    "hazard_exposure_weight": exposure_weight,
+                }
+                row.update(metrics)
+                episode_rows.append(row)
+        for summary_row in summarize(episode_rows):
+            summary_row = dict(summary_row)
+            summary_row["hazard_exposure_weight"] = exposure_weight
+            rows.append(summary_row)
+        save_progress(
+            "hazard_misspecification_stress",
+            completed=wi + 1,
+            total=len(exposure_weights),
+            exposure_weight=exposure_weight,
+        )
+    return rows
+
+
+def write_hazard_misspecification_table(hazard_rows: Sequence[Dict[str, float]]) -> None:
+    by_key = {
+        (float(row["hazard_exposure_weight"]), str(row["method"])): float(row["success_rate"])
+        for row in hazard_rows
+    }
+    lines = [
+        r"\begin{table}[t]",
+        r"\centering",
+        r"\caption{V2 hazard-misspecification stress. The true closure process is resampled so hazards range from exposure-driven (1.00) to age-driven (0.00), while CEMD still plans with exposure estimates. Success is mission completion rate.}",
+        r"\label{tab:hazard-misspecification}",
+        r"\begin{tabular}{lrrrr}",
+        r"\toprule",
+        r"Exposure share & CEMD & Age decay & Uncertainty only & Oracle \\",
+        r"\midrule",
+    ]
+    for exposure_weight in sorted({float(row["hazard_exposure_weight"]) for row in hazard_rows}, reverse=True):
+        lines.append(
+            f"{exposure_weight:.2f} & "
+            f"{by_key[(exposure_weight, 'cemd')]:.3f} & "
+            f"{by_key[(exposure_weight, 'age_decay')]:.3f} & "
+            f"{by_key[(exposure_weight, 'uncertainty_only')]:.3f} & "
+            f"{by_key[(exposure_weight, 'oracle_prob')]:.3f} \\\\"
+        )
+    lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}"])
+    HAZARD_STRESS_TABLE.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
 def formal_counterexample() -> Dict[str, object]:
     age = 30.0
     beta = 0.35
@@ -598,7 +682,12 @@ def formal_counterexample() -> Dict[str, object]:
     }
 
 
-def make_plots(summary_rows: Sequence[Dict[str, float]], edge_rows: Sequence[Dict[str, object]], stress_rows: Sequence[Dict[str, float]]) -> None:
+def make_plots(
+    summary_rows: Sequence[Dict[str, float]],
+    edge_rows: Sequence[Dict[str, object]],
+    stress_rows: Sequence[Dict[str, float]],
+    hazard_rows: Sequence[Dict[str, float]],
+) -> None:
     labels = [METHOD_LABELS[row["method"]] for row in summary_rows]
     x = np.arange(len(labels))
     success = [row["success_rate"] for row in summary_rows]
@@ -664,6 +753,25 @@ def make_plots(summary_rows: Sequence[Dict[str, float]], edge_rows: Sequence[Dic
     fig.savefig(FIGURES / "noise_stress.png", dpi=200)
     plt.close(fig)
 
+    fig, ax = plt.subplots(figsize=(6.4, 3.8))
+    for method in ["age_decay", "uncertainty_only", "cemd", "oracle_prob"]:
+        method_rows = sorted(
+            [row for row in hazard_rows if row["method"] == method],
+            key=lambda row: float(row["hazard_exposure_weight"]),
+        )
+        xs = [float(r["hazard_exposure_weight"]) for r in method_rows]
+        ys = [float(r["success_rate"]) for r in method_rows]
+        ax.plot(xs, ys, marker="o", label=METHOD_LABELS[method])
+    ax.set_xlabel("true hazard exposure share")
+    ax.set_ylabel("mission success")
+    ax.set_ylim(0, 1.02)
+    ax.set_title("Stress test: misspecified causal hazard")
+    ax.grid(alpha=0.25)
+    ax.legend(frameon=False)
+    fig.tight_layout()
+    fig.savefig(FIGURES / "hazard_misspecification.png", dpi=200)
+    plt.close(fig)
+
     make_example_world_plot()
 
 
@@ -691,7 +799,12 @@ def make_example_world_plot() -> None:
     plt.close(fig)
 
 
-def write_evidence_summary(summary_rows: Sequence[Dict[str, float]], formal: Dict[str, object], stress_rows: Sequence[Dict[str, float]]) -> None:
+def write_evidence_summary(
+    summary_rows: Sequence[Dict[str, float]],
+    formal: Dict[str, object],
+    stress_rows: Sequence[Dict[str, float]],
+    hazard_rows: Sequence[Dict[str, float]],
+) -> None:
     cemd = next(row for row in summary_rows if row["method"] == "cemd")
     age = next(row for row in summary_rows if row["method"] == "age_decay")
     uncertainty = next(row for row in summary_rows if row["method"] == "uncertainty_only")
@@ -700,6 +813,21 @@ def write_evidence_summary(summary_rows: Sequence[Dict[str, float]], formal: Dic
     stress_sentence = ""
     if worst_noise_cemd:
         stress_sentence = f" At exposure-noise 1.0, CEMD success is {worst_noise_cemd[0]['success_rate']:.3f}."
+    age_driven_cemd = next(
+        row
+        for row in hazard_rows
+        if row["method"] == "cemd" and abs(float(row["hazard_exposure_weight"]) - 0.0) < 1e-9
+    )
+    age_driven_age = next(
+        row
+        for row in hazard_rows
+        if row["method"] == "age_decay" and abs(float(row["hazard_exposure_weight"]) - 0.0) < 1e-9
+    )
+    age_driven_uncertainty = next(
+        row
+        for row in hazard_rows
+        if row["method"] == "uncertainty_only" and abs(float(row["hazard_exposure_weight"]) - 0.0) < 1e-9
+    )
     content = f"""# Evidence Summary
 
 ## Experiment
@@ -713,6 +841,10 @@ The simulator instantiates a long-horizon mobile robot with a stale graph map of
 - Uncertainty-only success: {uncertainty['success_rate']:.3f}; mean collisions: {uncertainty['mean_collisions']:.3f}; mean regret: {uncertainty['mean_regret']:.3f}.
 - CEMD success: {cemd['success_rate']:.3f}; mean collisions: {cemd['mean_collisions']:.3f}; mean regret: {cemd['mean_regret']:.3f}.{stress_sentence}
 
+## V2 Hazard-Misspecification Stress
+
+When true stale-map hazards are resampled to be age-driven rather than exposure-driven, CEMD is no longer advantaged by the simulator's causal variable. At exposure share 0.00, success is {age_driven_cemd['success_rate']:.3f} for CEMD, {age_driven_age['success_rate']:.3f} for age decay, and {age_driven_uncertainty['success_rate']:.3f} for uncertainty-only. This is the central failure boundary: CEMD is a useful memory-decay rule only when exposure is actually predictive of map invalidation.
+
 ## Formal Counterexample Check
 
 Two route edges have equal age ({formal['age_days_equal']:.1f} days), but exposures {formal['safe_exposure']:.2f} and {formal['exposed_exposure']:.2f}. A monotone age-only rule assigns the same stale-memory risk and chooses the shorter exposed route. Under the exposure hazard model, the expected-cost gap from that choice is {formal['expected_cost_gap_if_age_only_chooses_exposed']:.3f}.
@@ -723,10 +855,12 @@ Two route edges have equal age ({formal['age_days_equal']:.1f} days), but exposu
 - `results/aggregate_results.csv`
 - `results/edge_exposure_samples.csv`
 - `results/noise_stress_results.csv`
+- `results/hazard_misspecification_results.csv`
 - `results/formal_counterexample.json`
 - `figures/aggregate_results.png`
 - `figures/exposure_calibration.png`
 - `figures/noise_stress.png`
+- `figures/hazard_misspecification.png`
 - `figures/example_world.png`
 """
     (DOCS / "evidence_summary.md").write_text(content, encoding="utf-8")
@@ -738,6 +872,7 @@ def main() -> int:
         episode_rows, edge_rows = run_episode_set(n_episodes=650, seed=22000, exposure_noise=0.35)
         summary_rows = summarize(episode_rows)
         stress_rows = run_noise_stress([0.0, 0.25, 0.5, 0.75, 1.0], n_episodes=160, seed=44000)
+        hazard_rows = run_hazard_misspecification_stress([1.0, 0.75, 0.5, 0.25, 0.0], n_episodes=160, seed=66000)
         formal = formal_counterexample()
 
         write_csv(
@@ -811,11 +946,29 @@ def main() -> int:
                 "mean_risk_sum",
             ],
         )
+        write_csv(
+            RESULTS / "hazard_misspecification_results.csv",
+            hazard_rows,
+            [
+                "hazard_exposure_weight",
+                "method",
+                "episodes",
+                "success_rate",
+                "mean_travel_cost",
+                "median_travel_cost",
+                "mean_regret",
+                "mean_collisions",
+                "mean_replans",
+                "mean_planned_blocked_edges",
+                "mean_risk_sum",
+            ],
+        )
+        write_hazard_misspecification_table(hazard_rows)
         (RESULTS / "formal_counterexample.json").write_text(json.dumps(formal, indent=2), encoding="utf-8")
-        make_plots(summary_rows, edge_rows, stress_rows)
-        write_evidence_summary(summary_rows, formal, stress_rows)
-        save_progress("complete", episodes=650, stress_episodes=800)
-        print(json.dumps({"status": "complete", "episodes": 650, "stress_episodes": 800}))
+        make_plots(summary_rows, edge_rows, stress_rows, hazard_rows)
+        write_evidence_summary(summary_rows, formal, stress_rows, hazard_rows)
+        save_progress("complete", episodes=650, stress_episodes=800, hazard_stress_episodes=800)
+        print(json.dumps({"status": "complete", "episodes": 650, "stress_episodes": 800, "hazard_stress_episodes": 800}))
     except Exception as exc:  # noqa: BLE001
         save_progress("fatal_error", error=repr(exc))
         (RESULTS / "evidence_error.txt").write_text(repr(exc), encoding="utf-8")

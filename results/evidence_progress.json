@@ -1,5 +1,6 @@
 {
   "stage": "complete",
   "episodes": 650,
-  "stress_episodes": 800
+  "stress_episodes": 800,
+  "hazard_stress_episodes": 800
 }

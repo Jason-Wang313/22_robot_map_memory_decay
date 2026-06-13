@@ -26,10 +26,13 @@
     "oracle_prob"
   ],
   "noise_stress_rows": 30,
+  "hazard_misspecification_rows": 30,
+  "hazard_misspecification_table_exists": true,
   "figures": {
     "aggregate_results.png": true,
     "exposure_calibration.png": true,
     "noise_stress.png": true,
+    "hazard_misspecification.png": true,
     "example_world.png": true
   },
   "formal_counterexample": {
@@ -39,7 +42,7 @@
     "expected_cost_gap": 55.05399794921993
   },
   "paper_main_tex_exists": true,
-  "paper_main_pdf_exists": true,
+  "paper_main_pdf_exists": false,
   "downloads_pdf_exists": true,
   "official_iclr_2026_files_present": {
     "iclr2026_conference.sty": true,

@@ -58,6 +58,7 @@ def main() -> int:
     related_rows = read_csv_rows(DOCS / "related_work_matrix.csv")
     aggregate_rows = read_csv_rows(RESULTS / "aggregate_results.csv")
     noise_rows = read_csv_rows(RESULTS / "noise_stress_results.csv")
+    hazard_rows = read_csv_rows(RESULTS / "hazard_misspecification_results.csv")
 
     required_columns = {
         "problem_claimed",
@@ -87,12 +88,15 @@ def main() -> int:
         "hostile_prior_doc_entries": count_markdown_entries(DOCS / "hostile_prior_work.md"),
         "aggregate_methods": [row.get("method") for row in aggregate_rows],
         "noise_stress_rows": len(noise_rows),
+        "hazard_misspecification_rows": len(hazard_rows),
+        "hazard_misspecification_table_exists": (RESULTS / "hazard_misspecification_table.tex").exists(),
         "figures": {
             name: (FIGURES / name).exists()
             for name in [
                 "aggregate_results.png",
                 "exposure_calibration.png",
                 "noise_stress.png",
+                "hazard_misspecification.png",
                 "example_world.png",
             ]
         },

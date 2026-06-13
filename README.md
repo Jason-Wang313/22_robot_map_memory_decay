@@ -29,6 +29,8 @@ The main simulator command regenerates:
 - `results/episode_results.csv`
 - `results/aggregate_results.csv`
 - `results/noise_stress_results.csv`
+- `results/hazard_misspecification_results.csv`
+- `results/hazard_misspecification_table.tex`
 - `results/formal_counterexample.json`
 - `figures/*.png`
 - `docs/evidence_summary.md`
@@ -52,5 +54,4 @@ C:/Users/wangz/Downloads/22.pdf
 
 ## Evidence Status
 
-The result is simulated mechanistic evidence, not a real-robot validation. The strongest current support is the formal counterexample and a reproducible 650-episode graph-navigation simulation where CEMD improves mission success over no-decay, age-decay, fixed-hazard, and uncertainty-only baselines.
-
+The result is simulated mechanistic evidence, not a real-robot validation. The strongest current support is the formal counterexample and a reproducible 650-episode graph-navigation simulation where CEMD improves mission success over no-decay, age-decay, fixed-hazard, and uncertainty-only baselines. The v2 hazard-misspecification stress shows the boundary: when true stale-map hazards are made age-driven, age decay beats CEMD.

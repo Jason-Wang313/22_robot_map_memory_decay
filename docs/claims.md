@@ -6,6 +6,7 @@
 2. A causal-exposure clock can be computed from a robot's map, entry points, activity priors, and occlusion/absence intervals without observing the actual change.
 3. In simulated long-horizon navigation with stale maps, exposure-based decay reduces collisions with invalidated map edges and improves mission success relative to no-decay, age-decay, fixed-hazard, and uncertainty-only baselines.
 4. The mechanism is distinct from generic uncertainty: exposure can increase trust loss in a low-variance old edge and preserve trust in a high-age but physically unreachable edge.
+5. V2 support is conditional: when true hazards are resampled to be age-driven instead of exposure-driven, age decay beats CEMD, so the claim requires exposure to be predictive of map invalidation.
 
 ## Formal Claim Status
 
@@ -18,3 +19,4 @@
 - Do not claim state-of-the-art navigation performance.
 - Do not claim learned world models are unnecessary.
 - Do not claim real-world validation; this run will provide runnable simulated evidence only unless additional data becomes available.
+- Do not claim CEMD is a universally superior forgetting rule; the v2 hazard-misspecification stress identifies an age-driven failure case.

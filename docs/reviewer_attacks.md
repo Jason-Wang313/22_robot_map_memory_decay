@@ -7,7 +7,7 @@
 3. Dynamic occupancy grids already model changing cells.
    - Response: most dynamic occupancy models update from observations and local temporal processes; the paper targets unobserved causal reachability during absence and route consequence.
 4. The simulator bakes in the method's assumptions.
-   - Response: true risk; the paper should present ablations where exposure is noisy or partially wrong and mark this as simulated mechanistic evidence.
+   - Response: true risk; v2 adds a hazard-misspecification stress. When the true closure process is age-driven, age decay reaches 0.444 success and CEMD falls to 0.400, so the paper now states the causal boundary instead of claiming universal dominance.
 5. No real robot experiment.
    - Response: mark paper-readiness honestly; position as a mechanism paper needing real deployment validation.
 6. Exposure priors are hard to estimate.

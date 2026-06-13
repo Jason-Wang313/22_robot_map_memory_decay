@@ -20,8 +20,12 @@
 \begin{document}
 \maketitle
 
+\paragraph{Submission-hardening version: v2.}
+This revision adds a hazard-misspecification stress test that breaks the simulator's favorable assumption that stale-map hazards are exposure-driven. When the true closure process is resampled to be age-driven, age decay reaches 0.444 success while CEMD falls to 0.400, so the contribution is explicitly limited to settings where exposure is predictive of map invalidation.
+
 \begin{abstract}
 Long-horizon robots often navigate with maps whose geometry, topology, and semantics were last verified minutes, days, or months ago. A common response is to age the map, increase uncertainty, or re-observe doubtful places. This paper argues that the central variable is different: map memory should decay when the world had unobserved physical opportunities to invalidate a remembered spatial fact. We introduce Causal-Exposure Memory Decay (CEMD), a map-memory update rule that accumulates exposure for each remembered edge or cell from activity sources, access constraints, and occluded reachability during the robot's absence. Planning then discounts stale map facts according to exposure-weighted hazard and route consequence. A simple proposition shows that age-only decay can be strictly suboptimal even when two map edges have identical age and uncertainty. In a runnable graph-navigation simulator with stale building maps, CEMD improves success over no decay, fixed hazard, age decay, and uncertainty-only decay, while remaining below an oracle that knows true change probabilities. The result is not a real-robot validation; it is a mechanistic test of a field assumption that stale spatial memory is mainly a function of elapsed time or posterior variance.
+A v2 hazard-misspecification stress test narrows the claim: CEMD remains strongest when hazards are exposure-driven, but when the true process is made age-driven, age decay outperforms CEMD.
 \end{abstract}
 
 \section{Introduction}
@@ -37,6 +41,7 @@ We contribute:
 \item A formulation of Causal-Exposure Memory Decay (CEMD), where each remembered map element carries an exposure clock driven by activity priors, access constraints, and unobserved reachability.
 \item A small formal counterexample showing that age-only memory decay can choose a strictly worse route under exposure-dependent hazards, even when candidate edges have equal age.
 \item A reproducible simulator and evidence package. Across 650 stale-map navigation episodes, CEMD reaches 0.549 mission success versus 0.432 for age decay and 0.425 for uncertainty-only decay; an oracle using true change probabilities reaches 0.591.
+\item A v2 hazard-misspecification stress test showing the failure boundary: when true hazards are age-driven rather than exposure-driven, age decay reaches 0.444 success and CEMD reaches 0.400.
 \item A 1,337-paper metadata sweep, a 300-paper serious skim, a 225-paper deep-read subset, and a 100-paper hostile prior-work set used to bound the novelty claim.
 \end{itemize}
 
@@ -150,11 +155,16 @@ Table~\ref{tab:main} and Figure~\ref{fig:aggregate} show that exposure-based dec
 \paragraph{Stress test.}
 We also ran 160 episodes at exposure-estimate noise levels from 0 to 1.0. CEMD remains above age decay and uncertainty-only decay in most stress settings, including success 0.575 at noise 1.0 versus 0.525 for age decay and 0.419 for uncertainty-only decay. This result should be read cautiously: the simulator's true hazard is exposure-driven by construction. The stress test only checks that the mechanism does not collapse under coarse exposure estimates.
 
+\paragraph{V2 hazard-misspecification stress.}
+Table~\ref{tab:hazard-misspecification} attacks the central modeling assumption directly. We resample the true closure process so hazards range from exposure-driven to age-driven, while CEMD still plans with exposure estimates. CEMD is near the oracle when exposure is causal, but it is not a universally better decay rule. At exposure share 0.00, the age-decay baseline reaches 0.444 success versus 0.400 for CEMD. The paper's supported claim is therefore causal: exposure-based decay is useful when exposure predicts stale-map invalidation, not when age or another variable is the true hazard source.
+
+\input{../results/hazard_misspecification_table}
+
 \section{Discussion and Limitations}
 
 CEMD changes the central variable in stale-map navigation from ``how old or uncertain is this memory?'' to ``what unobserved physical opportunities existed to make this memory false?'' This distinction matters whenever two map elements have similar age but different exposure. It also matters when the consequence of a wrong memory is route-dependent: an exposed shortcut through a bottleneck can be worse than an old, low-exposure detour.
 
-The main limitation is validation. The evidence here is simulated and mechanistic. A real robot would need exposure priors from schedules, observed traffic, semantic affordances, access control, weather, or other deployment-specific signals. The paper also does not address full SLAM, localization failures, multi-agent interaction, or learned exposure estimation. Finally, the 1,337-paper landscape sweep is metadata-guided; it is useful for adversarial novelty search but does not replace a human camera-ready literature review.
+The main limitation is validation. The evidence here is simulated and mechanistic. A real robot would need exposure priors from schedules, observed traffic, semantic affordances, access control, weather, or other deployment-specific signals. The v2 hazard-misspecification stress shows that CEMD can lose to age decay when exposure is not the causal driver of map invalidation, so estimating the right hazard source is part of the problem rather than a detail. The paper also does not address full SLAM, localization failures, multi-agent interaction, or learned exposure estimation. Finally, the 1,337-paper landscape sweep is metadata-guided; it is useful for adversarial novelty search but does not replace a human camera-ready literature review.
 
 \section{Conclusion}
 

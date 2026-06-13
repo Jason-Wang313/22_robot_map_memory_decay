@@ -11,6 +11,10 @@ The simulator instantiates a long-horizon mobile robot with a stale graph map of
 - Uncertainty-only success: 0.425; mean collisions: 1.502; mean regret: 25.762.
 - CEMD success: 0.549; mean collisions: 1.285; mean regret: 22.551. At exposure-noise 1.0, CEMD success is 0.575.
 
+## V2 Hazard-Misspecification Stress
+
+When true stale-map hazards are resampled to be age-driven rather than exposure-driven, CEMD is no longer advantaged by the simulator's causal variable. At exposure share 0.00, success is 0.400 for CEMD, 0.444 for age decay, and 0.356 for uncertainty-only. This is the central failure boundary: CEMD is a useful memory-decay rule only when exposure is actually predictive of map invalidation.
+
 ## Formal Counterexample Check
 
 Two route edges have equal age (30.0 days), but exposures 0.05 and 3.80. A monotone age-only rule assigns the same stale-memory risk and chooses the shorter exposed route. Under the exposure hazard model, the expected-cost gap from that choice is 55.054.
@@ -21,8 +25,10 @@ Two route edges have equal age (30.0 days), but exposures 0.05 and 3.80. A monot
 - `results/aggregate_results.csv`
 - `results/edge_exposure_samples.csv`
 - `results/noise_stress_results.csv`
+- `results/hazard_misspecification_results.csv`
 - `results/formal_counterexample.json`
 - `figures/aggregate_results.png`
 - `figures/exposure_calibration.png`
 - `figures/noise_stress.png`
+- `figures/hazard_misspecification.png`
 - `figures/example_world.png`

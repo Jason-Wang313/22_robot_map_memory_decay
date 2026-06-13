@@ -1,6 +1,6 @@
 # Child Status
 
-Stage: complete.
+Stage: v2 submission hardening complete.
 
 Completed:
 - Wrote `plan.md` as the first workspace action.
@@ -14,9 +14,11 @@ Completed:
 - Created public GitHub repo `https://github.com/Jason-Wang313/22_robot_map_memory_decay`.
 - Committed and pushed complete repo to `origin/master`; latest checked commit was `acff98f` before this final status update.
 - Wrote `docs/final_audit.md` with `pending orchestrator copy` for the visible Desktop PDF status.
+- Added v2 hazard-misspecification stress. When true hazards are age-driven, age decay reaches 0.444 success and CEMD reaches 0.400.
+- Updated the manuscript with a visible v2 note, stress table, and narrowed limitation.
 
 Current commands:
-- Final status update commit and push.
+- Rebuilt paper, copied `C:/Users/wangz/Downloads/22.pdf`, removed local `paper/main.pdf`, and prepared v2 commit/push.
 
 Failures:
 - None.
